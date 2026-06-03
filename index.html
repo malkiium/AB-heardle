@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astrobot Heardle</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <header class="topbar">
+      <div class="logo-wrap">
+        <div class="logo-main">ASTROBOT</div>
+        <div class="logo-sub">Hear the Stars</div>
+      </div>
+    </header>
+
+    <section class="guess-board" id="attempts"></section>
+
+    <section class="timeline" aria-label="Snippet timeline">
+      <div id="segment0" class="segment active"></div>
+      <div id="segment1" class="segment"></div>
+      <div id="segment2" class="segment"></div>
+      <div id="segment3" class="segment"></div>
+      <div id="segment4" class="segment"></div>
+      <div id="segment5" class="segment"></div>
+    </section>
+
+    <section class="player-panel">
+      <audio id="audio" preload="metadata"></audio>
+
+      <div class="player-row">
+        <span id="currentTime">0:00</span>
+        <button id="muteButton" class="small-control" title="Mute">🔊</button>
+        <input id="volumeSlider" class="volume" type="range" min="0" max="1" step="0.01" value="0.8" />
+        <button id="playButton" class="play-button" title="Play">▶</button>
+        <span id="snippetLength">0:01</span>
+      </div>
+
+      <div class="search-row">
+        <div class="search-box">
+          <span>⌕</span>
+          <input id="guessInput" list="songOptions" placeholder="Search for the title or game" autocomplete="off" />
+          <button id="clearButton" class="clear-button" title="Clear">×</button>
+        </div>
+        <datalist id="songOptions"></datalist>
+      </div>
+
+      <div class="action-row">
+        <button id="skipButton" class="skip-button">SKIP (+1S)</button>
+        <button id="guessButton" class="submit-button">SUBMIT</button>
+      </div>
+
+      <p id="message" class="message">Loading songs...</p>
+    </section>
+
+    <section id="resultPanel" class="result hidden">
+      <h2 id="resultTitle"></h2>
+      <p id="answerText"></p>
+      <div class="result-actions">
+        <button id="nextButton">NEXT SONG</button>
+        <button id="shareButton">COPY RESULT</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="songs.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
