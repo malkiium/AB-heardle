@@ -1,3 +1,5 @@
+const guessCount = document.getElementById('guessCount');
+const fullSongPlayer = document.getElementById('fullSongPlayer');
 const audio = document.getElementById('audio');
 const playButton = document.getElementById('playButton');
 const muteButton = document.getElementById('muteButton');
@@ -238,17 +240,33 @@ function nextAttempt() {
 
 function finishRound(won) {
   locked = true;
+
   audio.pause();
   clearInterval(stopTimer);
-  playButton.textContent = '▶';
-  disableGame(true);
-  resultPanel.classList.remove('hidden');
-  resultTitle.textContent = won ? 'Correct!' : 'Song missed!';
-  answerText.textContent = `Answer: ${currentSong.title}${currentSong.game ? ` — ${currentSong.game}` : ''}`;
-  message.textContent = won ? 'Nice guess.' : 'Better luck next song.';
-}
 
-function nextRound() {
+  playButton.textContent = '▶';
+
+  disableGame(true);
+
+  resultPanel.classList.remove('hidden');
+
+  resultTitle.textContent = won
+    ? 'Correct!'
+    : 'Song missed!';
+
+  answerText.textContent =
+    `${currentSong.title}${currentSong.game ? ` — ${currentSong.game}` : ''}`;
+
+  guessCount.textContent =
+    `Solved in ${Math.min(currentAttempt + 1, snippetSteps.length)} / ${snippetSteps.length} guesses`;
+
+  fullSongPlayer.src = currentSong.file;
+  fullSongPlayer.load();
+
+  message.textContent = won
+    ? 'Nice guess.'
+    : 'Better luck next song.';
+}function nextRound() {
   round++;
   startRound();
 }
