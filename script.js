@@ -1,6 +1,6 @@
-const guessCount = document.getElementById('guessCount');
-const fullSongPlayer = document.getElementById('fullSongPlayer');
 const audio = document.getElementById('audio');
+const fullSongPlayer = document.getElementById('fullSongPlayer');
+const guessCount = document.getElementById('guessCount');
 const playButton = document.getElementById('playButton');
 const muteButton = document.getElementById('muteButton');
 const volumeSlider = document.getElementById('volumeSlider');
@@ -47,6 +47,25 @@ function formatTime(seconds) {
 
 function cleanPath(file) {
   return String(file || '').replace(/^\.\//, '').trim();
+}
+
+function escapeHTML(text) {
+  return String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function findSongFromGuess(guess) {
+  const clean = normalize(guess);
+
+  return songs.find(song =>
+    clean === normalize(song.title) ||
+    clean === normalize(`${song.title}${song.game || ''}`) ||
+    clean === normalize(`${song.title} — ${song.game || ''}`)
+  ) || null;
 }
 
 function normalizeSongs(data) {
@@ -137,6 +156,11 @@ function startRound() {
   guessInput.value = '';
   drawEmptyAttempts();
   resultPanel.classList.add('hidden');
+  if (fullSongPlayer) {
+    fullSongPlayer.pause();
+    fullSongPlayer.removeAttribute('src');
+    fullSongPlayer.load();
+  }
   message.textContent = `${songs.length} songs loaded. Ready.`;
   updateSnippetLabel();
   updateTimeline();
@@ -190,10 +214,31 @@ function playSnippet() {
   }, 50);
 }
 
-function setAttempt(text, kind) {
+function setAttempt(guessSong, kind, fallbackText = '') {
   const row = attemptsBox.children[currentAttempt];
   row.className = `attempt-row ${kind}`;
-  row.innerHTML = `<span class="square"></span><span>${text}</span>`;
+
+  if (kind === 'skipped') {
+    row.innerHTML = '<span class="square"></span><div class="attempt-info"><div class="attempt-title">SKIPPED</div></div>';
+    return;
+  }
+
+  const title = guessSong ? guessSong.title : fallbackText;
+  const game = guessSong ? guessSong.game : '';
+  const gameMatches = guessSong && normalize(guessSong.game) === normalize(currentSong.game);
+
+  row.innerHTML = `
+    <span class="square"></span>
+    <div class="attempt-info">
+      <div class="attempt-title">${escapeHTML(title)}</div>
+      ${game ? `
+        <div class="attempt-game ${gameMatches ? 'match' : 'miss'}">
+          <span class="attempt-icon">${gameMatches ? '✓' : '×'}</span>
+          ${escapeHTML(game)}
+        </div>
+      ` : ''}
+    </div>
+  `;
 }
 
 function guessMatches(guess, song) {
@@ -211,11 +256,13 @@ function submitGuess() {
     return;
   }
 
+  const guessedSong = findSongFromGuess(guess);
+
   if (guessMatches(guess, currentSong)) {
-    setAttempt(guess, 'correct');
+    setAttempt(guessedSong || currentSong, 'correct', guess);
     finishRound(true);
   } else {
-    setAttempt(guess, 'wrong');
+    setAttempt(guessedSong, 'wrong', guess);
     nextAttempt();
   }
   guessInput.value = '';
@@ -223,7 +270,7 @@ function submitGuess() {
 
 function skipGuess() {
   if (locked) return;
-  setAttempt('SKIPPED', 'skipped');
+  setAttempt(null, 'skipped', 'SKIPPED');
   nextAttempt();
 }
 
@@ -240,33 +287,17 @@ function nextAttempt() {
 
 function finishRound(won) {
   locked = true;
-
   audio.pause();
   clearInterval(stopTimer);
-
   playButton.textContent = '▶';
-
   disableGame(true);
-
   resultPanel.classList.remove('hidden');
+  resultTitle.textContent = won ? 'Correct!' : 'Song missed!';
+  answerText.textContent = `Answer: ${currentSong.title}${currentSong.game ? ` — ${currentSong.game}` : ''}`;
+  message.textContent = won ? 'Nice guess.' : 'Better luck next song.';
+}
 
-  resultTitle.textContent = won
-    ? 'Correct!'
-    : 'Song missed!';
-
-  answerText.textContent =
-    `${currentSong.title}${currentSong.game ? ` — ${currentSong.game}` : ''}`;
-
-  guessCount.textContent =
-    `Solved in ${Math.min(currentAttempt + 1, snippetSteps.length)} / ${snippetSteps.length} guesses`;
-
-  fullSongPlayer.src = currentSong.file;
-  fullSongPlayer.load();
-
-  message.textContent = won
-    ? 'Nice guess.'
-    : 'Better luck next song.';
-}function nextRound() {
+function nextRound() {
   round++;
   startRound();
 }
